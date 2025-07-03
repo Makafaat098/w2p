@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Word to PDF Converter</title>
+    <title>Ultimate Word to PDF Converter</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -27,6 +27,7 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             padding: 40px 20px;
+            line-height: 1.6;
         }
         
         .container {
@@ -134,6 +135,25 @@
             color: #6c757d;
         }
         
+        /* Loading Bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
         #status {
             padding: 15px;
             border-radius: 10px;
@@ -185,6 +205,10 @@
         /* Blog Section */
         .blog-section {
             margin-top: 60px;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
         
         .blog-title {
@@ -214,70 +238,73 @@
             z-index: 0;
         }
         
-        .blog-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 30px;
+        .blog-article {
+            margin-bottom: 50px;
         }
         
-        .blog-card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+        .blog-article h3 {
+            color: var(--dark);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
         }
         
-        .blog-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        .blog-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .blog-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .blog-image {
-            height: 200px;
+            height: 400px;
             background-size: cover;
             background-position: center;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         
-        .blog-content {
-            padding: 20px;
+        .blog-content p {
+            margin-bottom: 20px;
+            color: #495057;
         }
         
-        .blog-date {
-            color: var(--accent);
-            font-size: 0.9rem;
-            margin-bottom: 10px;
+        .blog-content ul, .blog-content ol {
+            margin-bottom: 20px;
+            padding-left: 20px;
         }
         
-        .blog-card h3 {
-            color: var(--dark);
-            margin-bottom: 10px;
-            font-size: 1.3rem;
+        .blog-content li {
+            margin-bottom: 8px;
         }
         
-        .blog-excerpt {
-            color: #6c757d;
-            margin-bottom: 15px;
-            line-height: 1.5;
+        .blog-tags {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
         }
         
-        .read-more {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s ease;
-        }
-        
-        .read-more:hover {
-            color: var(--secondary);
+        .blog-tag {
+            background: #e9ecef;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: #495057;
         }
         
         /* Responsive */
         @media (max-width: 768px) {
-            .converter-card {
+            .converter-card, .blog-section {
                 padding: 30px 20px;
             }
             
@@ -285,8 +312,8 @@
                 font-size: 2rem;
             }
             
-            .blog-grid {
-                grid-template-columns: 1fr;
+            .blog-image {
+                height: 250px;
             }
         }
     </style>
@@ -297,7 +324,7 @@
             <div class="converter-icon">
                 <i class="fas fa-file-word"></i> <i class="fas fa-arrow-right"></i> <i class="fas fa-file-pdf"></i>
             </div>
-            <h1>Premium Word to PDF Converter</h1>
+            <h1>Ultimate Word to PDF Converter</h1>
             <p class="subtitle">High-quality document conversion with one click</p>
             
             <div class="file-upload">
@@ -308,6 +335,10 @@
                 <div id="fileName">No file selected</div>
             </div>
             
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
             <div id="status"></div>
             <button id="downloadBtn">
                 <i class="fas fa-download"></i> Download PDF
@@ -316,38 +347,111 @@
         
         <div class="blog-section">
             <div class="blog-title">
-                <h2>Latest Blog Posts</h2>
+                <h2>Document Conversion Blog</h2>
             </div>
             
-            <div class="blog-grid">
-                <div class="blog-card">
-                    <div class="blog-image" style="background-image: url('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
-                    <div class="blog-content">
-                        <div class="blog-date">June 15, 2023</div>
-                        <h3>How to Convert Documents Like a Pro</h3>
-                        <p class="blog-excerpt">Learn the best practices for converting documents while preserving formatting and quality.</p>
-                        <a href="#" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>
-                    </div>
+            <div class="blog-article">
+                <h3>The Complete Guide to Document Conversion in 2023</h3>
+                <div class="blog-meta">
+                    <span><i class="far fa-calendar-alt"></i> June 15, 2023</span>
+                    <span><i class="far fa-user"></i> Admin</span>
+                    <span><i class="far fa-clock"></i> 5 min read</span>
                 </div>
                 
-                <div class="blog-card">
-                    <div class="blog-image" style="background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
-                    <div class="blog-content">
-                        <div class="blog-date">May 28, 2023</div>
-                        <h3>The Future of Document Management</h3>
-                        <p class="blog-excerpt">Discover emerging trends in document processing and digital workflows.</p>
-                        <a href="#" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>
-                    </div>
+                <div class="blog-image" style="background-image: url('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80');"></div>
+                
+                <div class="blog-content">
+                    <p>In today's digital age, document conversion has become an essential part of business workflows and personal productivity. Whether you're converting Word documents to PDF, Excel sheets to Google Sheets, or images to editable text, understanding the best practices can save you time and frustration.</p>
+                    
+                    <h4>Why Document Conversion Matters</h4>
+                    <p>Document conversion serves several important purposes:</p>
+                    <ul>
+                        <li><strong>Compatibility:</strong> Ensure your files can be opened by anyone, regardless of their software</li>
+                        <li><strong>Preservation:</strong> Maintain formatting and layout across different platforms</li>
+                        <li><strong>Accessibility:</strong> Make documents usable for people with disabilities</li>
+                        <li><strong>Security:</strong> Convert to formats that are harder to modify or more secure</li>
+                    </ul>
+                    
+                    <h4>Choosing the Right Format</h4>
+                    <p>Different formats serve different purposes:</p>
+                    <ol>
+                        <li><strong>PDF:</strong> Best for sharing final versions that shouldn't be edited</li>
+                        <li><strong>DOCX:</strong> Ideal for collaborative editing in Word</li>
+                        <li><strong>ODT:</strong> Open standard alternative to DOCX</li>
+                        <li><strong>RTF:</strong> Basic format compatible with nearly all word processors</li>
+                    </ol>
+                    
+                    <p>When converting from Word to PDF specifically, you'll want to pay attention to:</p>
+                    <ul>
+                        <li>Font embedding to ensure text displays correctly</li>
+                        <li>Image compression settings for file size vs quality</li>
+                        <li>Hyperlink preservation if your document contains links</li>
+                        <li>Table of contents conversion for navigation</li>
+                    </ul>
+                    
+                    <h4>Advanced Conversion Techniques</h4>
+                    <p>For power users, consider these advanced techniques:</p>
+                    <p><strong>Batch Processing:</strong> Convert multiple files at once using automation tools or scripts. This is particularly useful when dealing with large numbers of documents.</p>
+                    <p><strong>OCR Conversion:</strong> When converting scanned documents, use Optical Character Recognition to make the text selectable and searchable.</p>
+                    <p><strong>Cloud Conversion:</strong> Services like our Word to PDF converter allow you to process documents without installing any software.</p>
                 </div>
                 
-                <div class="blog-card">
-                    <div class="blog-image" style="background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
-                    <div class="blog-content">
-                        <div class="blog-date">April 10, 2023</div>
-                        <h3>Productivity Tools You Need in 2023</h3>
-                        <p class="blog-excerpt">Top tools to boost your productivity and streamline your document workflow.</p>
-                        <a href="#" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>
-                    </div>
+                <div class="blog-tags">
+                    <span class="blog-tag">Document Conversion</span>
+                    <span class="blog-tag">PDF</span>
+                    <span class="blog-tag">Word</span>
+                    <span class="blog-tag">Productivity</span>
+                </div>
+            </div>
+            
+            <div class="blog-article">
+                <h3>How to Maintain Formatting When Converting Documents</h3>
+                <div class="blog-meta">
+                    <span><i class="far fa-calendar-alt"></i> May 28, 2023</span>
+                    <span><i class="far fa-user"></i> Editor</span>
+                    <span><i class="far fa-clock"></i> 8 min read</span>
+                </div>
+                
+                <div class="blog-image" style="background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80');"></div>
+                
+                <div class="blog-content">
+                    <p>One of the most common frustrations with document conversion is losing formatting during the process. Complex layouts, special fonts, and intricate tables can all become distorted when converting between formats. Here's how to avoid these issues.</p>
+                    
+                    <h4>Understanding Formatting Challenges</h4>
+                    <p>Different file formats handle formatting in different ways:</p>
+                    <ul>
+                        <li><strong>Fonts:</strong> Not all fonts are available on all systems</li>
+                        <li><strong>Margins:</strong> Default margin settings vary between programs</li>
+                        <li><strong>Styles:</strong> Heading styles may not translate perfectly</li>
+                        <li><strong>Images:</strong> Positioning and text wrapping can change</li>
+                    </ul>
+                    
+                    <h4>Best Practices for Perfect Conversion</h4>
+                    <p>Follow these guidelines to maintain formatting:</p>
+                    <ol>
+                        <li>Use standard fonts or embed fonts in your document</li>
+                        <li>Define styles properly rather than using manual formatting</li>
+                        <li>Check page setup options before converting</li>
+                        <li>Use tables for layout only when absolutely necessary</li>
+                        <li>Preview the converted document before finalizing</li>
+                    </ol>
+                    
+                    <p>When using our Word to PDF converter, we automatically handle many of these issues for you, but being aware of them helps when troubleshooting any conversion problems.</p>
+                    
+                    <h4>Special Considerations for Business Documents</h4>
+                    <p>For important business documents like contracts, proposals, and reports:</p>
+                    <ul>
+                        <li>Always do a test conversion first</li>
+                        <li>Check pagination to ensure nothing important gets cut off</li>
+                        <li>Verify that all hyperlinks still work</li>
+                        <li>Confirm that headers and footers appear correctly</li>
+                    </ul>
+                </div>
+                
+                <div class="blog-tags">
+                    <span class="blog-tag">Formatting</span>
+                    <span class="blog-tag">Word</span>
+                    <span class="blog-tag">Tutorial</span>
                 </div>
             </div>
         </div>
@@ -357,6 +461,8 @@
         const fileInput = document.getElementById('fileInput');
         const uploadBtn = document.getElementById('uploadBtn');
         const fileName = document.getElementById('fileName');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
         const statusDiv = document.getElementById('status');
         const downloadBtn = document.getElementById('downloadBtn');
         
@@ -374,6 +480,24 @@
             statusDiv.textContent = 'Processing your document...';
             statusDiv.className = 'status-processing';
             downloadBtn.style.display = 'none';
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+
+            // Simulate progress for demo (in real app, you'd use actual upload progress)
+            const simulateProgress = () => {
+                let width = 0;
+                const interval = setInterval(() => {
+                    if (width >= 90) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    width += 10;
+                    progressBar.style.width = width + '%';
+                }, 300);
+                return interval;
+            };
+
+            const progressInterval = simulateProgress();
 
             try {
                 // File ko base64 mein convert karein
@@ -392,6 +516,9 @@
                         body: Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))
                     });
                     
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '100%';
+                    
                     if (!response.ok) throw new Error('Conversion failed. Please try again.');
                     
                     const pdfBlob = await response.blob();
@@ -400,9 +527,15 @@
                     statusDiv.textContent = 'Conversion successful! Ready to download.';
                     statusDiv.className = 'status-success';
                     downloadBtn.style.display = 'inline-flex';
+                    
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                    }, 1000);
                 };
                 reader.readAsDataURL(file);
             } catch (error) {
+                clearInterval(progressInterval);
+                progressContainer.style.display = 'none';
                 statusDiv.textContent = `Error: ${error.message}`;
                 statusDiv.className = 'status-error';
                 console.error('Conversion error:', error);
