@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asaan Word to PDF Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            border: 2px dashed #ccc;
+            padding: 30px;
+            border-radius: 10px;
+        }
+        #fileInput {
+            display: none;
+        }
+        .upload-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        #status {
+            margin: 15px 0;
+            color: #555;
+        }
+        #downloadBtn {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Word to PDF Converter</h1>
+        <p>Sirf Word file upload karein, PDF khud ba khud download ho jayega</p>
+        
+        <input type="file" id="fileInput" accept=".doc,.docx">
+        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+            Word File Select Karein
+        </button>
+        
+        <div id="status">Koi file select nahi ki gayi</div>
+        <button id="downloadBtn">PDF Download Karein</button>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const statusDiv = document.getElementById('status');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        // API Key (Cloudmersive)
+        const API_KEY = '98bf1057-e897-4d52-acb8-e1fd4d339dfe';
+        let convertedPdf = null;
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            statusDiv.innerHTML = 'Processing... <small>Please wait</small>';
+            downloadBtn.style.display = 'none';
+
+            try {
+                // File ko base64 mein convert karein
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const base64Data = event.target.result.split(',')[1];
+                    
+                    // Cloudmersive API call
+                    const response = await fetch('https://api.cloudmersive.com/convert/docx/to/pdf', {
+                        method: 'POST',
+                        headers: {
+                            'Apikey': API_KEY,
+                            'Content-Type': 'application/octet-stream'
+                        },
+                        body: Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))
+                    });
+                    
+                    if (!response.ok) throw new Error('Conversion failed');
+                    
+                    const pdfBlob = await response.blob();
+                    convertedPdf = URL.createObjectURL(pdfBlob);
+                    
+                    statusDiv.innerHTML = 'Conversion successful!';
+                    downloadBtn.style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
+            } catch (error) {
+                statusDiv.innerHTML = `Error: ${error.message}`;
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (!convertedPdf) return;
+            
+            const a = document.createElement('a');
+            a.href = convertedPdf;
+            a.download = 'converted.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    </script>
+</body>
+</html>
